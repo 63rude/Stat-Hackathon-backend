@@ -1,0 +1,4 @@
+fastapi
+uvicorn
+h2o
+pydantic
