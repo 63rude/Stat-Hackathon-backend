@@ -1,18 +1,41 @@
 import h2o
 from h2o.frame import H2OFrame
+import pandas as pd
 
-# Start H2O (once per app)
+# Initialize H2O once
 h2o.init()
 
-# Load your trained model
+# Load trained model
 model = h2o.load_model("models/StackedEnsemble_AllModels_3_AutoML_4_20250529_205741")
 
 def predict_stage(input_data: dict):
-    # Convert input dict to H2OFrame
-    frame = H2OFrame([input_data])
+    try:
+        # Convert input to one-row H2OFrame
+        formatted = {k: [v] for k, v in input_data.items()}
+        frame = H2OFrame(formatted)
 
-    # Make prediction
-    prediction = model.predict(frame)
+        # Ensure categorical variables are marked correctly
+        for col in ["Sex", "Ascites", "Hepatomegaly", "Spiders", "Edema"]:
+            frame[col] = frame[col].asfactor()
 
-    # Convert to Python dict
-    return prediction.as_data_frame().to_dict(orient="records")[0]
+        # Predict
+        prediction = model.predict(frame)
+
+        # Handle possible list vs. DataFrame returns
+        raw = prediction.as_data_frame()
+        if isinstance(raw, list):
+            raw_df = pd.DataFrame(raw)
+        else:
+            raw_df = raw
+
+        # Extract all columns (class + probabilities)
+        result = raw_df.iloc[0].to_dict()
+        return {
+            "Stage": result.get("predict", "Unknown"),
+            "Probabilities": {k: v for k, v in result.items() if k != "predict"},
+            "RawPrediction": result
+        }
+
+    except Exception as e:
+        print("🔥 Prediction error:", e)
+        return {"error": str(e)}
