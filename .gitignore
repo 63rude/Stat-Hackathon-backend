@@ -1,0 +1,43 @@
+# 🐍 Python cache & compiled files
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# 🧪 Environment folders
+.env
+.venv
+env/
+venv/
+ENV/
+Pipfile.lock
+
+# 📦 Packages & dependencies
+*.egg
+*.egg-info/
+dist/
+build/
+
+# 📚 Jupyter stuff (just in case)
+.ipynb_checkpoints
+
+# 📁 IDE/editor configs
+.vscode/
+.idea/
+*.sublime-workspace
+*.sublime-project
+
+# 🔑 Secrets
+.env
+*.secret
+*.key
+
+# 🧠 H2O & model output (optional)
+h2o_automl.log
+*.model
+*.mojo/
+*.jar
+
+# 🗃️ OS
+.DS_Store
+Thumbs.db
