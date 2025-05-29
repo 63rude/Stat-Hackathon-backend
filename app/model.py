@@ -8,6 +8,15 @@ h2o.init()
 # Load trained model
 model = h2o.load_model("models/StackedEnsemble_AllModels_3_AutoML_4_20250529_205741")
 
+def interpret_stage(stage):
+    stage_str = str(int(float(stage)))  # Handles 4, 4.0, "4"
+    return {
+        "1": "Minimal fibrosis",
+        "2": "Mild fibrosis",
+        "3": "Moderate fibrosis",
+        "4": "Advanced fibrosis or cirrhosis"
+    }.get(stage_str, "Unknown stage")
+
 def predict_stage(input_data: dict):
     try:
         # Convert input to one-row H2OFrame
@@ -30,8 +39,11 @@ def predict_stage(input_data: dict):
 
         # Extract all columns (class + probabilities)
         result = raw_df.iloc[0].to_dict()
+        predicted_stage = result.get("predict", "Unknown")
+
         return {
-            "Stage": result.get("predict", "Unknown"),
+            "Stage": predicted_stage,
+            "Interpretation": interpret_stage(str(predicted_stage)),
             "Probabilities": {k: v for k, v in result.items() if k != "predict"},
             "RawPrediction": result
         }
