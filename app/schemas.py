@@ -1,12 +1,13 @@
 from pydantic import BaseModel
+from typing import Literal
 
 class PatientData(BaseModel):
     Age: float
-    Sex: str  # ✅ change from int to str
-    Ascites: int
-    Hepatomegaly: int
-    Spiders: int
-    Edema: int
+    Sex: Literal["F", "M"]
+    Ascites: Literal["N", "Y"]
+    Hepatomegaly: Literal["N", "Y"]
+    Spiders: Literal["N", "Y"]
+    Edema: Literal["N", "S", "Y"]
     Bilirubin: float
     Cholesterol: float
     Albumin: float
@@ -16,5 +17,5 @@ class PatientData(BaseModel):
     Tryglicerides: float
     Platelets: float
     Prothrombin: float
-    SGOTxALKPHOS: float
-    SGOTxBILIRUBIN: float
+    SGOTxALKPHOS: float | None = None
+    SGOTxBILIRUBIN: float | None = None

@@ -1,11 +1,13 @@
 # 🐍 Python cache & compiled files
 __pycache__/
+.pytest_cache/
 *.py[cod]
 *.pyo
 *.pyd
 
 # 🧪 Environment folders
 .env
+.env.*
 .venv
 env/
 venv/
@@ -34,6 +36,7 @@ build/
 
 # 🧠 H2O & model output (optional)
 h2o_automl.log
+*.log
 *.model
 *.mojo/
 *.jar

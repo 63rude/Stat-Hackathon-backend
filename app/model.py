@@ -1,12 +1,14 @@
 import h2o
 from h2o.frame import H2OFrame
 import pandas as pd
+from pathlib import Path
 
 # Initialize H2O once
 h2o.init()
 
 # Load trained model
-model = h2o.load_model("models/StackedEnsemble_AllModels_3_AutoML_4_20250529_205741")
+model_path = Path(__file__).resolve().parent.parent / "models" / "StackedEnsemble_AllModels_3_AutoML_4_20250529_205741"
+model = h2o.load_model(str(model_path))
 
 def interpret_stage(stage):
     stage_str = str(int(float(stage)))  # Handles 4, 4.0, "4"
@@ -18,36 +20,28 @@ def interpret_stage(stage):
     }.get(stage_str, "Unknown stage")
 
 def predict_stage(input_data: dict):
-    try:
-        # Convert input to one-row H2OFrame
-        formatted = {k: [v] for k, v in input_data.items()}
-        frame = H2OFrame(formatted)
+    # Keep calculated features in sync with the values entered in the form.
+    input_data = dict(input_data)
+    input_data["SGOTxALKPHOS"] = input_data["SGOT"] * input_data["Alk_Phos"]
+    input_data["SGOTxBILIRUBIN"] = input_data["SGOT"] * input_data["Bilirubin"]
 
-        # Ensure categorical variables are marked correctly
-        for col in ["Sex", "Ascites", "Hepatomegaly", "Spiders", "Edema"]:
-            frame[col] = frame[col].asfactor()
+    formatted = {k: [v] for k, v in input_data.items()}
+    frame = H2OFrame(formatted)
 
-        # Predict
-        prediction = model.predict(frame)
+    for col in ["Sex", "Ascites", "Hepatomegaly", "Spiders", "Edema"]:
+        frame[col] = frame[col].asfactor()
 
-        # Handle possible list vs. DataFrame returns
-        raw = prediction.as_data_frame()
-        if isinstance(raw, list):
-            raw_df = pd.DataFrame(raw)
-        else:
-            raw_df = raw
+    prediction = model.predict(frame)
 
-        # Extract all columns (class + probabilities)
-        result = raw_df.iloc[0].to_dict()
-        predicted_stage = result.get("predict", "Unknown")
+    raw = prediction.as_data_frame()
+    raw_df = pd.DataFrame(raw) if isinstance(raw, list) else raw
 
-        return {
-            "Stage": predicted_stage,
-            "Interpretation": interpret_stage(str(predicted_stage)),
-            "Probabilities": {k: v for k, v in result.items() if k != "predict"},
-            "RawPrediction": result
-        }
+    result = raw_df.iloc[0].to_dict()
+    predicted_stage = result.get("predict", "Unknown")
 
-    except Exception as e:
-        print("🔥 Prediction error:", e)
-        return {"error": str(e)}
+    return {
+        "Stage": predicted_stage,
+        "Interpretation": interpret_stage(str(predicted_stage)),
+        "Probabilities": {k: v for k, v in result.items() if k != "predict"},
+        "RawPrediction": result,
+    }
